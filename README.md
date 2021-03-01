@@ -2,7 +2,7 @@
 
 ## Approach
 <div align="center">
-  <img src="https://github.com/wofmanaf/Group-CAM/blob/main/figure/fig_1.png">
+  <img src="https://github.com/wofmanaf/Group-CAM/blob/master/figure/fig_1.png">
 </div>
 <p align="center">
   Figure 1: Pipeline of Group-CAM.
