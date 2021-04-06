@@ -30,7 +30,7 @@ model_names = sorted(name for name in models.__dict__
                      if name.islower() and not name.startswith("__")
                      and callable(models.__dict__[name]))
 
-parser = argparse.ArgumentParser(description='PyTorch ImageNet Training')
+parser = argparse.ArgumentParser(description='An example of adopting group-cam to fine-tune classification models')
 parser.add_argument('data', metavar='DIR',
                     help='path to dataset')
 parser.add_argument('-a', '--arch', metavar='ARCH', default='resnet18',
@@ -76,6 +76,7 @@ parser.add_argument('--seed', default=None, type=int,
                     help='seed for initializing training. ')
 parser.add_argument('--gpu', default=None, type=int,
                     help='GPU id to use.')
+
 parser.add_argument('--multiprocessing-distributed', action='store_true',
                     help='Use multi-processing distributed training to launch '
                          'N processes per node, which has N GPUs. This is the '
@@ -299,6 +300,8 @@ def train(train_loader, model, criterion, optimizer, epoch, args):
         saliency_maps = []
         for idx in range(images.shape[0]):
             image = images[idx].unsqueeze(0)
+            # adopt group-cam to fine-tune model,
+            # backward_hook of group-cam may be removed to improve the efficiency
             gc = GroupCAM(model)
             if idx == images.shape[0] - 1:
                 saliency = gc(image, class_idx=target[idx], retain_graph=False)

@@ -3,11 +3,9 @@ import torch
 import torch.nn.functional as F
 from kornia.filters.gaussian import gaussian_blur2d
 
-blur = lambda x: gaussian_blur2d(x, kernel_size=(51, 51), sigma=(50., 50.))
-
 
 class GroupCAM(object):
-    def __init__(self, model, target_layer="layer4.2", groups=32):
+    def __init__(self, model, target_layer="module.layer4.2", groups=16):
         super(GroupCAM, self).__init__()
         self.model = model.eval().cuda()
         self.groups = groups
@@ -45,38 +43,31 @@ class GroupCAM(object):
         activations = self.activations['value'].data
         b, k, u, v = activations.size()
 
-        score_saliency_map = torch.zeros((1, 1, h, w))
-        # blur = gaussian_blur2d(input, kernel_size=(51, 51), sigma=(50., 50.))
-
-        if torch.cuda.is_available():
-            activations = activations.cuda()
-            score_saliency_map = score_saliency_map.cuda()
+        alpha = gradients.view(b, k, -1).mean(2)
+        weights = alpha.view(b, k, 1, 1)
+        activations = weights * activations
 
         masks = activations.chunk(self.groups, 1)
+        # parallel implement
+        masks = torch.cat(masks, dim=0)
+        saliency_map = masks.sum(1, keepdim=True)
+        saliency_map = F.relu(saliency_map)
+        threshold = np.percentile(saliency_map.cpu().numpy(), 70)
+        saliency_map = torch.where(
+            saliency_map > threshold, saliency_map, torch.full_like(saliency_map, 0))
+
+        saliency_map = F.interpolate(saliency_map, size=(h, w), mode='bilinear', align_corners=False)
+        saliency_map = saliency_map.reshape(self.groups, -1)
+        inter_min, inter_max = saliency_map.min(dim=-1, keepdim=True)[0], saliency_map.max(dim=-1, keepdim=True)[0]
+        saliency_map = (saliency_map-inter_min) / (inter_max - inter_min)
+        saliency_map = saliency_map.reshape(self.groups, 1, h, w)
+
         with torch.no_grad():
-            for saliency_map in masks:
-                saliency_map = saliency_map.sum(1, keepdims=True)
-                saliency_map = F.relu(saliency_map)
-                threshold = np.percentile(saliency_map.cpu().numpy(), 70)
-                saliency_map = torch.where(
-                    saliency_map > threshold, saliency_map, torch.full_like(saliency_map, 0))
-                saliency_map = F.interpolate(saliency_map, size=(h, w), mode='bilinear', align_corners=False)
-
-                if saliency_map.max() == saliency_map.min():
-                    continue
-
-                # normalize to 0-1
-                norm_saliency_map = (saliency_map - saliency_map.min()) / (saliency_map.max() - saliency_map.min())
-
-                # how much increase if keeping the highlighted region
-                # predication on masked input
-                blur_input = input * norm_saliency_map + blur(input) * (1 - norm_saliency_map)
-                output = self.model(blur_input)
-                output = F.softmax(output, dim=-1)
-                score = output[0][predicted_class]
-
-                # score_saliency_map += score * saliency_map
-                score_saliency_map += score * norm_saliency_map
+            blur_input = input * saliency_map + gaussian_blur2d(input) * (1 - saliency_map)
+            output = self.model(blur_input)
+        output = F.softmax(output, dim=-1)
+        score = output[:, predicted_class].unsqueeze(-1).unsqueeze(-1)
+        score_saliency_map = torch.sum(saliency_map * score, dim=0, keepdim=True)
 
         score_saliency_map = F.relu(score_saliency_map)
         score_saliency_map_min, score_saliency_map_max = score_saliency_map.min(), score_saliency_map.max()
@@ -86,7 +77,6 @@ class GroupCAM(object):
 
         score_saliency_map = (score_saliency_map - score_saliency_map_min) / (
                 score_saliency_map_max - score_saliency_map_min).data
-
         return score_saliency_map
 
     def __call__(self, input, class_idx=None, retain_graph=False):
