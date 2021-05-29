@@ -1,5 +1,5 @@
 # Group-CAM
-By Qing-Long Zhang and Yu-Bin Yang
+By Zhang, Qinglong and Rao, Lu and Yang, Yubin
 
 [State Key Laboratory for Novel Software Technology at Nanjing University]
 
@@ -15,7 +15,7 @@ This repo is the official implementation of ["Group-CAM: Group Score-Weighted Vi
 
 
 ## Citing Group-CAM
-Qinglong Zhang, Lu Rao, Yubin Yang
+
 ```
 @article{zhql2021gc,
   title={Group-CAM: Group Score-Weighted Visual Explanations for Deep Convolutional Networks},
