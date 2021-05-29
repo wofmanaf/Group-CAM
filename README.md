@@ -3,7 +3,7 @@ By Qing-Long Zhang and Yu-Bin Yang
 
 [State Key Laboratory for Novel Software Technology at Nanjing University]
 
-This repo is the official implementation of ["Group-CAM: Group Score-Weighted Visual Explanations for Deep Convolutional Networks"](https://arxiv.org/pdf/2103.13859.pdf).
+This repo is the official implementation of ["Group-CAM: Group Score-Weighted Visual Explanations for Deep Convolutional Networks"](https://arxiv.org/pdf/2103.13859v2.pdf).
 
 ## Approach
 <div align="center">
