@@ -13,6 +13,9 @@ This repo is the official implementation of ["Group-CAM: Group Score-Weighted Vi
   Figure 1: Pipeline of Group-CAM.
 </p>
 
+## Target layer
+ResNet: 'layer4.2',  Vgg19: 'features.35'
+
 
 ## Citing Group-CAM
 

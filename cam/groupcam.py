@@ -45,8 +45,11 @@ class GroupCAM(object):
         activations = self.activations['value'].data
         b, k, u, v = activations.size()
 
+        alpha = gradients.view(b, k, -1).mean(2)
+        weights = alpha.view(b, k, 1, 1)
+        activations = weights * activations
+
         score_saliency_map = torch.zeros((1, 1, h, w))
-        # blur = gaussian_blur2d(input, kernel_size=(51, 51), sigma=(50., 50.))
 
         if torch.cuda.is_available():
             activations = activations.cuda()
@@ -54,6 +57,7 @@ class GroupCAM(object):
 
         masks = activations.chunk(self.groups, 1)
         with torch.no_grad():
+            base_line = F.softmax(self.model(blur(x)), dim=-1)[0][predicted_class]
             for saliency_map in masks:
                 saliency_map = saliency_map.sum(1, keepdims=True)
                 saliency_map = F.relu(saliency_map)
@@ -73,7 +77,7 @@ class GroupCAM(object):
                 blur_input = input * norm_saliency_map + blur(input) * (1 - norm_saliency_map)
                 output = self.model(blur_input)
                 output = F.softmax(output, dim=-1)
-                score = output[0][predicted_class]
+                score = output[0][predicted_class] - base_line
 
                 # score_saliency_map += score * saliency_map
                 score_saliency_map += score * norm_saliency_map

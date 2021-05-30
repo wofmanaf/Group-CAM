@@ -3,6 +3,7 @@ import torch
 import torch.nn.functional as F
 from kornia.filters.gaussian import gaussian_blur2d
 
+blur = lambda x: gaussian_blur2d(x, kernel_size=(51, 51), sigma=(50., 50.))
 
 class GroupCAM(object):
     def __init__(self, model, target_layer="module.layer4.2", groups=16):
@@ -63,7 +64,7 @@ class GroupCAM(object):
         saliency_map = saliency_map.reshape(self.groups, 1, h, w)
 
         with torch.no_grad():
-            blur_input = input * saliency_map + gaussian_blur2d(input) * (1 - saliency_map)
+            blur_input = input * saliency_map + blur(input) * (1 - saliency_map)
             output = self.model(blur_input)
         output = F.softmax(output, dim=-1)
         score = output[:, predicted_class].unsqueeze(-1).unsqueeze(-1)
