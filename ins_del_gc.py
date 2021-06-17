@@ -1,4 +1,4 @@
-# CUDA_VISIBLE_DEVICES = 0
+# CUDA_VISIBLE_DEVICES=0
 import json
 
 import matplotlib.pyplot as plt
@@ -15,10 +15,10 @@ from tqdm import tqdm
 
 from cam import GroupCAM
 
-val_dir = '/path/to/imagenet/val/'
+val_dir = '/vcu/data/ilsvrc2012/val/'
 batch_size = 1
 workers = 4
-batch = 0
+batch = 4
 HW = 224 * 224
 img_label = json.load(open('./utils/resources/imagenet_class_index.json', 'r'))
 model_type = "vgg"
@@ -27,7 +27,7 @@ saliency_type = 'group_cam'
 sample_range = range(500 * batch, 500 * (batch + 1))
 
 vgg = models.vgg19(pretrained=True).eval()
-cam = GroupCAM(vgg, target_layer='features.35', groups=32)
+cam = GroupCAM(vgg, target_layer='features.36', groups=32)
 
 
 # Plots image from tensor
@@ -91,13 +91,15 @@ def explain_all(data_loader, explainer):
     global vgg
     explanations = []
     images = []
-    for i, (img, cls_idx) in enumerate(tqdm(data_loader, total=len(data_loader), desc='Explaining images')):
-        images.append(img)
-        # cls_idx = vgg(img.cuda()).max(1)[-1].item()
-        cls_idx = cls_idx.cuda()
-        saliency_maps = explainer(img.cuda(), class_idx=cls_idx).data
-
-        explanations.append(saliency_maps.cpu().numpy())
+    for i, (img, _) in enumerate(tqdm(data_loader, total=len(data_loader), desc='Explaining images')):
+        try:
+            # cls_idx = vgg(img.cuda()).max(1)[-1].item()
+            saliency_maps = explainer(img.cuda(), class_idx=None).data
+            explanations.append(saliency_maps.cpu().numpy())
+            images.append(img)
+        except Exception as e:
+            pass
+        continue
     explanations = np.array(explanations)
     return images, explanations
 
