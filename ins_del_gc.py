@@ -15,10 +15,10 @@ from tqdm import tqdm
 
 from cam import GroupCAM
 
-val_dir = '/vcu/data/ilsvrc2012/val/'
+val_dir = '/path/to/imagenet/val/'
 batch_size = 1
 workers = 4
-batch = 4
+batch = 0
 HW = 224 * 224
 img_label = json.load(open('./utils/resources/imagenet_class_index.json', 'r'))
 model_type = "vgg"
