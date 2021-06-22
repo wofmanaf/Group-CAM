@@ -53,19 +53,6 @@ def independent_randomization(arch, layer=None):
     return model
 
 
-def preprocess_img(cv_img):
-    """Turn a opencv image into tensor and normalize it"""
-    # revert the channels from BGR to RGB
-    img = cv_img.copy()[:, :, ::-1]
-    # convert tor tensor
-    img = torch.from_numpy(np.ascontiguousarray(np.transpose(img, (2, 0, 1))))
-    # Normalize
-    transform_norm = transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
-    norm_img = transform_norm(img).unsqueeze(0)
-
-    return img, norm_img
-
-
 raw_img = cv2.imread('images/' + 'ILSVRC2012_val_00043392.JPEG', 1)
 raw_img = cv2.resize(raw_img, (224, 224), interpolation=cv2.INTER_LINEAR)
 
@@ -75,7 +62,7 @@ vgg19 = models.vgg19(pretrained=True).eval()
 logit = vgg19(norm_image)
 cls_idx = logit.max(1)[-1].item()
 
-heatmap = GroupCAM(vgg19, target_layer='features.35', groups=32)(norm_image, class_idx=cls_idx).cpu().data
+heatmap = GroupCAM(vgg19, target_layer='features.36', groups=32)(norm_image, class_idx=cls_idx).cpu().data
 cam = show_cam(image, heatmap, 'base.png')
 
 for i in range(1, 17):
@@ -84,7 +71,7 @@ for i in range(1, 17):
     else:
         model = independent_randomization('vgg19', layer=i)
     model = model.cuda()
-    gc = GroupCAM(model, target_layer='features.35', groups=32)
+    gc = GroupCAM(model, target_layer='features.36', groups=32)
     heatmap = gc(norm_image, class_idx=cls_idx).cpu().data
     torch.cuda.empty_cache()
     model = model.cpu()

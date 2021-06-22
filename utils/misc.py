@@ -361,3 +361,16 @@ def show_cam(img, mask, title=None):
         vutils.save_image(cam, title)
 
     return cam
+
+
+def preprocess_img(cv_img):
+    """Turn a opencv image into tensor and normalize it"""
+    # revert the channels from BGR to RGB
+    img = cv_img.copy()[:, :, ::-1]
+    # convert tor tensor
+    img = torch.from_numpy(np.ascontiguousarray(np.transpose(img, (2, 0, 1))))
+    # Normalize
+    transform_norm = transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
+    norm_img = transform_norm(img).unsqueeze(0)
+
+    return img, norm_img

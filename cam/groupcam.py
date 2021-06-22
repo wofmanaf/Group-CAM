@@ -57,7 +57,7 @@ class GroupCAM(object):
 
         masks = activations.chunk(self.groups, 1)
         with torch.no_grad():
-            base_line = F.softmax(self.model(blur(x)), dim=-1)[0][predicted_class]
+            base_line = F.softmax(self.model(blur(x).cuda()), dim=-1)[0][predicted_class]
             for saliency_map in masks:
                 saliency_map = saliency_map.sum(1, keepdims=True)
                 saliency_map = F.relu(saliency_map)
