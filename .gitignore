@@ -50,3 +50,12 @@ _darcs
 /projects/*/datasets
 /models
 /snippet
+/Images/
+/multi-label/
+/Sample/
+/backbones/
+/VIDEO/
+/Results/
+/show_blurig.py
+/show_demo.py
+/show_mutilabel.py

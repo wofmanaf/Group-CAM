@@ -3,31 +3,27 @@ import json
 
 import matplotlib.pyplot as plt
 import numpy as np
+
 import torch
 import torch.nn.functional as F
+from torch.utils.data import DataLoader
+from torch.utils.data.sampler import Sampler
 import torchvision.datasets as datasets
 import torchvision.models as models
 import torchvision.transforms as transforms
+
 from kornia.filters.gaussian import gaussian_blur2d
-from torch.utils.data import DataLoader
-from torch.utils.data.sampler import Sampler
 from tqdm import tqdm
 
-from cam import GroupCAM
+from cam import *
 
-val_dir = '/path/to/imagenet/val/'
-batch_size = 1
-workers = 4
-batch = 0
+__all__ = ['CausalMetric', 'auc']
+
+import warnings
+warnings.filterwarnings("ignore")
+
 HW = 224 * 224
 img_label = json.load(open('./utils/resources/imagenet_class_index.json', 'r'))
-model_type = "vgg"
-saliency_type = 'group_cam'
-
-sample_range = range(500 * batch, 500 * (batch + 1))
-
-vgg = models.vgg19(pretrained=True).eval()
-cam = GroupCAM(vgg, target_layer='features.36', groups=32)
 
 
 # Plots image from tensor
@@ -62,23 +58,6 @@ class RangeSampler(Sampler):
         return len(self.r)
 
 
-normalize = transforms.Normalize(mean=[0.485, 0.456, 0.406],
-                                 std=[0.229, 0.224, 0.225])
-val_loader = DataLoader(
-    datasets.ImageFolder(val_dir, transforms.Compose([
-        transforms.Resize(256),
-        transforms.CenterCrop(224),
-        transforms.ToTensor(),
-        normalize,
-    ])),
-    batch_size=batch_size,
-    shuffle=False,
-    num_workers=workers,
-    pin_memory=True,
-    sampler=RangeSampler(sample_range)
-)
-
-
 def explain_all(data_loader, explainer):
     """Get saliency maps for all images in val loader
     Args:
@@ -98,15 +77,10 @@ def explain_all(data_loader, explainer):
             explanations.append(saliency_maps.cpu().numpy())
             images.append(img)
         except Exception as e:
-            pass
-        continue
+            continue
+
     explanations = np.array(explanations)
     return images, explanations
-
-
-images, exp = explain_all(val_loader, explainer=cam)
-# Function that blurs input image
-blur = lambda x: gaussian_blur2d(x, kernel_size=(51, 51), sigma=(50., 50.))
 
 
 class CausalMetric(object):
@@ -142,12 +116,12 @@ class CausalMetric(object):
 
         n_steps = (HW + self.step - 1) // self.step
         if self.mode == 'del':
-            title = 'Deletion game'
+            title = 'Deletion Curve'
             ylabel = 'Pixels deleted'
             start = img.clone()
             finish = self.substrate_fn(img)
         elif self.mode == 'ins':
-            title = 'Insertion game'
+            title = 'Insertion Curve'
             ylabel = 'Pixels inserted'
             start = self.substrate_fn(img)
             finish = img.clone()
@@ -176,34 +150,75 @@ class CausalMetric(object):
                 plt.xlabel(ylabel)
                 plt.ylabel(img_label[str(cls_idx)][-1])
                 if save_to:
-                    plt.savefig(save_to + '/{:03d}.png'.format(i))
+                    plt.savefig(save_to + '/{:06d}.jpg'.format(i))
                     plt.close()
                 else:
                     plt.show()
 
             if i < n_steps:
                 coords = salient_order[:, self.step * i:self.step * (i + 1)]
-                start.cpu().numpy().reshape(1, 3, HW)[0, :, coords] = finish.cpu().numpy().reshape(1, 3, HW)[0, :,
-                                                                      coords]
+                start.cpu().numpy().reshape(1, 3, HW)[0, :, coords] = \
+                    finish.cpu().numpy().reshape(1, 3, HW)[0, :, coords]
         return scores
 
 
-# Evaluate a batch of explanations
-insertion = CausalMetric(vgg, 'ins', 224 * 8, substrate_fn=blur)
-deletion = CausalMetric(vgg, 'del', 224 * 8, substrate_fn=torch.zeros_like)
+def main():
+    # hyper-parameters
+    # val_dir = '/path/to/imagenet/val/'
+    val_dir = '/vcu/data/ilsvrc2012/val/'
+    batch_size = 1
+    num_workers = 4
+    batch = 0
 
-scores = {'del': [], 'ins': []}
-del_tmps = []
-ins_tmps = []
-# Load saved batch of explanations
-for i in tqdm(range(len(images)), total=len(images), desc='Evaluating Saliency'):
-    # Evaluate deletion
-    del_score = deletion.evaluate(img=images[i], mask=exp[i], cls_idx=None, verbose=0)
-    ins_score = insertion.evaluate(img=images[i], mask=exp[i], cls_idx=None, verbose=0)
-    del_tmps.append(del_score)
-    ins_tmps.append(ins_score)
-    scores['del'].append(auc(del_score))
-    scores['ins'].append(auc(ins_score))
+    model_type = "vgg"
+    saliency_type = 'group_cam'
 
-print('----------------------------------------------------------------')
-print('Final:\nDeletion - {:.5f}\nInsertion - {:.5f}'.format(np.mean(scores['del']), np.mean(scores['ins'])))
+    sample_range = range(5 * batch, 5 * (batch + 1))
+
+    vgg = models.vgg19(pretrained=True).eval()
+    vgg = vgg.cuda()
+    cam = GroupCAM(vgg, target_layer='features.35', groups=32)
+
+    normalize = transforms.Normalize(mean=[0.485, 0.456, 0.406],
+                                     std=[0.229, 0.224, 0.225])
+    val_loader = DataLoader(
+        datasets.ImageFolder(val_dir, transforms.Compose([
+            transforms.Resize(256),
+            transforms.CenterCrop(224),
+            transforms.ToTensor(),
+            normalize,
+        ])),
+        batch_size=batch_size,
+        shuffle=False,
+        num_workers=num_workers,
+        pin_memory=True,
+        sampler=RangeSampler(sample_range)
+    )
+
+    images, exp = explain_all(val_loader, explainer=cam)
+    # Function that blurs input image
+    blur = lambda x: gaussian_blur2d(x, kernel_size=(51, 51), sigma=(50., 50.))
+
+    # Evaluate a batch of explanations
+    insertion = CausalMetric(vgg, 'ins', 224 * 8, substrate_fn=blur)
+    deletion = CausalMetric(vgg, 'del', 224 * 8, substrate_fn=torch.zeros_like)
+
+    scores = {'del': [], 'ins': []}
+    del_tmps = []
+    ins_tmps = []
+    # Load saved batch of explanations
+    for i in tqdm(range(len(images)), total=len(images), desc='Evaluating Saliency'):
+        # Evaluate deletion
+        del_score = deletion.evaluate(img=images[i], mask=exp[i], cls_idx=None, verbose=0)
+        ins_score = insertion.evaluate(img=images[i], mask=exp[i], cls_idx=None, verbose=0)
+        del_tmps.append(del_score)
+        ins_tmps.append(ins_score)
+        scores['del'].append(auc(del_score))
+        scores['ins'].append(auc(ins_score))
+
+    print('----------------------------------------------------------------')
+    print('Final:\nDeletion - {:.5f}\nInsertion - {:.5f}'.format(np.mean(scores['del']), np.mean(scores['ins'])))
+
+
+if __name__ == '__main__':
+    main()

@@ -5,6 +5,16 @@ By Zhang, Qinglong and Rao, Lu and Yang, Yubin
 
 This repo is the official implementation of ["Group-CAM: Group Score-Weighted Visual Explanations for Deep Convolutional Networks"](https://arxiv.org/pdf/2103.13859v4.pdf).
 
+# Updates
+* 2021/08/18 *
+
+- Adding Grad-CAM, guided_bp, IG, RISE, Score-CAM and Smooth Grad
+- Cluster methods for grouping are supported in Group-CAM
+- Adding demo for insertion and deletion
+
+Attention: Imagenet Segmentation Experiments on will be supported soon. 
+Paper for the new version of Group-CAM will be available after I get a job.
+
 ## Approach
 <div align="center">
   <img src="https://github.com/wofmanaf/Group-CAM/blob/master/figure/fig_1.png">
@@ -14,12 +24,17 @@ This repo is the official implementation of ["Group-CAM: Group Score-Weighted Vi
 </p>
 
 ## Target layer
-ResNet: 'layer4.2',  Vgg19: 'features.36'
+ResNet: 'layer4.2',  Vgg19: 'features.35'
 
 ## Demo
 To visualize a heatmap, run:
 ```bash
-python demo.py --arch vgg19 --target_layer features.36 --input images/ILSVRC2012_val_00043392.JPEG --output base.png
+python demo.py --arch vgg19 --target_layer features.35 --input images/ILSVRC2012_val_00043392.JPEG --output base.png
+```
+
+with insertion and deletion curves:
+```bash
+python demo.py --arch vgg19 --target_layer features.35 --input images/ILSVRC2012_val_00043392.JPEG --output base.png --ins_del
 ```
 
 ## Citing Group-CAM
@@ -28,7 +43,7 @@ python demo.py --arch vgg19 --target_layer features.36 --input images/ILSVRC2012
 @article{zhql2021gc,
   title={Group-CAM: Group Score-Weighted Visual Explanations for Deep Convolutional Networks},
   author={Zhang, Qinglong and Rao, Lu and Yang, Yubin},
-  journal={arXiv preprint arXiv:2103.13859v4},
+  journal={arXiv preprint arXiv:2103.13859},
   year={2021}
 }
 ```
