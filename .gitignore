@@ -43,6 +43,8 @@ model_ts*.txt
 .vscode
 _darcs
 
+cam/__pycache__
+utils/__pycache__
 # project dirs
 /detectron2/model_zoo/configs
 /datasets/*

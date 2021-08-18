@@ -164,8 +164,7 @@ class CausalMetric(object):
 
 def main():
     # hyper-parameters
-    # val_dir = '/path/to/imagenet/val/'
-    val_dir = '/vcu/data/ilsvrc2012/val/'
+    val_dir = '/path/to/imagenet/val/'
     batch_size = 1
     num_workers = 4
     batch = 0

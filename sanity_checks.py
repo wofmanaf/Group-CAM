@@ -62,7 +62,7 @@ vgg19 = models.vgg19(pretrained=True).eval()
 logit = vgg19(norm_image)
 cls_idx = logit.max(1)[-1].item()
 
-heatmap = GroupCAM(vgg19, target_layer='features.36', groups=32)(norm_image, class_idx=cls_idx).cpu().data
+heatmap = GroupCAM(vgg19, target_layer='features.35', groups=32)(norm_image, class_idx=cls_idx).cpu().data
 cam = show_cam(image, heatmap, 'base.png')
 
 for i in range(1, 17):
@@ -71,7 +71,7 @@ for i in range(1, 17):
     else:
         model = independent_randomization('vgg19', layer=i)
     model = model.cuda()
-    gc = GroupCAM(model, target_layer='features.36', groups=32)
+    gc = GroupCAM(model, target_layer='features.35', groups=32)
     heatmap = gc(norm_image, class_idx=cls_idx).cpu().data
     torch.cuda.empty_cache()
     model = model.cpu()
