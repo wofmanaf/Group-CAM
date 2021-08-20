@@ -4,8 +4,7 @@ import torchvision.models as models
 from utils import *
 from cam import GroupCAM
 
-# check_type = 'cascade_random'
-check_type = 'ind_random'
+check_type = 'cascade_random'
 
 import warnings
 warnings.filterwarnings("ignore")
@@ -58,7 +57,6 @@ def independent_randomization(arch, layer=None):
 
 
 raw_img = cv2.imread('Images/' + 'ILSVRC2012_val_00000073.JPEG', 1)
-# raw_img = cv2.imread('Images/' + 'ILSVRC2012_val_00043392.JPEG', 1)
 raw_img = cv2.resize(raw_img, (224, 224), interpolation=cv2.INTER_LINEAR)
 
 raw_img = np.float32(raw_img) / 255
