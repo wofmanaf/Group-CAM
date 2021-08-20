@@ -59,18 +59,18 @@ class RangeSampler(Sampler):
 
 
 def explain_all(data_loader, explainer):
-    """Get saliency maps for all images in val loader
+    """Get saliency maps for all Images in val loader
     Args:
         data_loader: torch data loarder
         explainer: gradcam, etc.
     Return:
-        images: list, length: len(data_loader), element: torch tensor with shape of (1, 3, H, W)
+        Images: list, length: len(data_loader), element: torch tensor with shape of (1, 3, H, W)
         explanations: np.ndarrays, with shape of (len(data_loader, H, W)
     """
     global vgg
     explanations = []
     images = []
-    for i, (img, _) in enumerate(tqdm(data_loader, total=len(data_loader), desc='Explaining images')):
+    for i, (img, _) in enumerate(tqdm(data_loader, total=len(data_loader), desc='Explaining Images')):
         try:
             # cls_idx = vgg(img.cuda()).max(1)[-1].item()
             saliency_maps = explainer(img.cuda(), class_idx=None).data
@@ -172,7 +172,8 @@ def main():
     model_type = "vgg"
     saliency_type = 'group_cam'
 
-    sample_range = range(5 * batch, 5 * (batch + 1))
+    # sample_range = range(5 * batch, 5 * (batch + 1))
+    sample_range = range(1 * batch, 1 * (batch + 1))
 
     vgg = models.vgg19(pretrained=True).eval()
     vgg = vgg.cuda()
@@ -199,8 +200,8 @@ def main():
     blur = lambda x: gaussian_blur2d(x, kernel_size=(51, 51), sigma=(50., 50.))
 
     # Evaluate a batch of explanations
-    insertion = CausalMetric(vgg, 'ins', 224 * 8, substrate_fn=blur)
-    deletion = CausalMetric(vgg, 'del', 224 * 8, substrate_fn=torch.zeros_like)
+    insertion = CausalMetric(vgg, 'ins', 224 * 2, substrate_fn=blur)
+    deletion = CausalMetric(vgg, 'del', 224 * 2, substrate_fn=torch.zeros_like)
 
     scores = {'del': [], 'ins': []}
     del_tmps = []

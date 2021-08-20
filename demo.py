@@ -28,7 +28,7 @@ def parse_args():
     parser.add_argument('--arch', '-a', metavar='ARCH', default='vgg19')
     parser.add_argument('--cls_idx', default=None, type=int)
     parser.add_argument('--target_layer', default='features.35', type=str)
-    parser.add_argument('--input', default='', type=str, help='Input images')
+    parser.add_argument('--input', default='', type=str, help='Input Images')
     parser.add_argument('--output', default='', type=str, help='output path')
     parser.add_argument('--ins_del', action='store_true', default=False,
                         help='whether to record the insertion and deletion results.')
@@ -45,14 +45,15 @@ def main():
     model = models.__dict__[args.arch](pretrained=True).eval()
     model = model.cuda()
 
-    heatmap = GroupCAM(model, target_layer=args.target_layer)\
-        (norm_image.cuda(), class_idx=args.cls_idx).cpu().data
+    gc = GradCAM(model, target_layer=args.target_layer)
+
+    heatmap = gc(norm_image.cuda(), class_idx=args.cls_idx).cpu().data
     cam = show_cam(image, heatmap, args.output)
 
     if args.ins_del:
         blur = lambda x: gaussian_blur2d(x, kernel_size=(51, 51), sigma=(50., 50.))
-        insertion = CausalMetric(model, 'ins', 224 * 8, substrate_fn=blur)
-        deletion = CausalMetric(model, 'del', 224 * 8, substrate_fn=torch.zeros_like)
+        insertion = CausalMetric(model, 'ins', 224 * 2, substrate_fn=blur)
+        deletion = CausalMetric(model, 'del', 224 * 2, substrate_fn=torch.zeros_like)
         out_video_path = './VIDEO'
         check_path_exist(out_video_path)
 

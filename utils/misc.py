@@ -51,7 +51,7 @@ def apply_transforms(image, size=224):
 
     Note:
         Symbols used to describe dimensions:
-            - N: number of images in a batch
+            - N: number of Images in a batch
             - C: number of channels
             - H: height of the image
             - W: width of the image
@@ -105,7 +105,7 @@ def apply_transforms_v0(image, size=224):
 
     Note:
         Symbols used to describe dimensions:
-            - N: number of images in a batch
+            - N: number of Images in a batch
             - C: number of channels
             - H: height of the image
             - W: width of the image
@@ -153,7 +153,7 @@ def denormalize(tensor):
 
     Note:
         Symbols used to describe dimensions:
-            - N: number of images in a batch
+            - N: number of Images in a batch
             - C: number of channels
             - H: height of the image
             - W: width of the image
@@ -209,7 +209,7 @@ def format_for_plotting(tensor):
     """Formats the shape of tensor for plotting.
 
     Tensors typically have a shape of :math:`(N, C, H, W)` or :math:`(C, H, W)`
-    which is not suitable for plotting as images. This function formats an
+    which is not suitable for plotting as Images. This function formats an
     input tensor :math:`(H, W, C)` for RGB and :math:`(H, W)` for mono-channel
     data.
 
@@ -225,7 +225,7 @@ def format_for_plotting(tensor):
 
     Note:
         Symbols used to describe dimensions:
-            - N: number of images in a batch
+            - N: number of Images in a batch
             - C: number of channels
             - H: height of the image
             - W: width of the image
@@ -394,9 +394,9 @@ def convert_to_gray(x, percentile=99):
 def write_video(inputpath, outputname, img_num, fps=10):
     """Generate videos
     Args:
-        input_path: the path for input images
+        input_path: the path for input Images
         output_name: the output name for the video
-        img_num: the number of the input images
+        img_num: the number of the input Images
         fps: frames per second
     """
 

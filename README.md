@@ -8,11 +8,11 @@ This repo is the official implementation of ["Group-CAM: Group Score-Weighted Vi
 # Updates
 * 2021/08/18 *
 
-- Adding Grad-CAM, guided_bp, IG, RISE, Score-CAM and Smooth Grad
+- Adding Grad-CAM, Guided_BP, IG, RISE, Score-CAM and Smooth Grad
 - Cluster methods for grouping are supported in Group-CAM
 - Adding demo for insertion and deletion
 
-Attention: Imagenet Segmentation Experiments on will be supported soon. 
+Attention: Imagenet Segmentation Experiments will be supported soon. 
 Paper for the new version of Group-CAM will be available after I get a job.
 
 ## Approach
@@ -29,12 +29,12 @@ ResNet: 'layer4.2',  Vgg19: 'features.35'
 ## Demo
 To visualize a heatmap, run:
 ```bash
-python demo.py --arch vgg19 --target_layer features.35 --input images/ILSVRC2012_val_00043392.JPEG --output base.png
+python demo.py --arch vgg19 --target_layer features.35 --input Images/ILSVRC2012_val_00000073.JPEG --output base.png
 ```
 
 with insertion and deletion curves:
 ```bash
-python demo.py --arch vgg19 --target_layer features.35 --input images/ILSVRC2012_val_00043392.JPEG --output base.png --ins_del
+python demo.py --arch vgg19 --target_layer features.35 --input Images/ILSVRC2012_val_00000073.JPEG --output base.png --ins_del
 ```
 
 ## Citing Group-CAM
