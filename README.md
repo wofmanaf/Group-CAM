@@ -12,9 +12,6 @@ This repo is the official implementation of ["Group-CAM: Group Score-Weighted Vi
 - Cluster methods for grouping are supported in Group-CAM
 - Adding demo for insertion and deletion
 
-Attention: Imagenet Segmentation Experiments will be supported soon. 
-Paper for the new version of Group-CAM will be available after I get a job.
-
 ## Approach
 <div align="center">
   <img src="https://github.com/wofmanaf/Group-CAM/blob/master/figure/fig_1.png">
